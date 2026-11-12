@@ -156,7 +156,7 @@
   <section class="screen" id="s-input">
     <span class="tag">Satu langkah lagi</span>
     <h1>Username IG kamu apa?</h1>
-    <p class="lead">Janji nggak langsung nge-like foto lama kamu. Paling cuma satu.</p>
+    <p class="lead">Begitu dikirim, langsung nyampe ke aku. Janji nggak nge-like foto lama kamu. Paling cuma satu.</p>
     <form id="f-user" autocomplete="off">
       <label class="field">
         <span>@</span>
@@ -186,9 +186,9 @@
   <section class="screen" id="s-done">
     <span class="tag">Akses diberikan 🎉</span>
     <h1>Yeay! Makasih, <span id="uname"></span></h1>
-    <p class="lead">Sekarang salin pesan ini, terus kirim ke aku di chat ya.</p>
+    <p class="lead" id="done-lead">Username kamu udah nyampe ke aku 💌</p>
     <div class="bubble" id="msg"></div>
-    <button class="btn-main full" id="b-copy" type="button" style="margin-top:14px">Salin pesan 📋</button>
+    <button class="btn-main full" id="b-copy" type="button" style="margin-top:14px; display:none">Salin pesan 📋</button>
     <p class="note">Siap-siap dapat notif follow dari aku ✨</p>
   </section>
 
@@ -293,11 +293,39 @@ $('u').addEventListener('input', e => {
   else { h.textContent = 'Sip, kelihatannya valid 👌'; h.classList.remove('err'); }
 });
 
+/* Kirim ke email lewat FormSubmit */
+const FORM_ENDPOINT = 'https://formsubmit.co/ajax/karoameta23@gmail.com';
+
+function sendToEmail(username){
+  let waktu = '';
+  try {
+    waktu = new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',dateStyle:'full',timeStyle:'short'}).format(new Date()) + ' WIB';
+  } catch(e) { waktu = new Date().toString(); }
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 12000);
+  return fetch(FORM_ENDPOINT, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Accept':'application/json' },
+    body: JSON.stringify({
+      _subject: '💌 Dia ngasih username IG-nya!',
+      _template: 'table',
+      username: '@' + username,
+      link: 'https://instagram.com/' + username,
+      waktu: waktu
+    }),
+    signal: ctrl.signal
+  })
+  .then(r => r.json().catch(() => ({})).then(d => r.ok && String(d.success) !== 'false'))
+  .catch(() => false)
+  .finally(() => clearTimeout(t));
+}
+
 let message = '';
 $('f-user').addEventListener('submit', e => {
   e.preventDefault();
   const v = $('u').value.trim();
   if (!valid(v)) return;
+  $('b-send').disabled = true;
   $('uname').textContent = '@' + v;
   message = 'IG aku: @' + v + ' 😎';
   $('msg').textContent = message;
@@ -308,7 +336,18 @@ $('f-user').addEventListener('submit', e => {
     setTimeout(() => li.classList.add('show'), i * 700);
     setTimeout(() => li.classList.add('done'), i * 700 + 600);
   });
-  setTimeout(() => { show('s-done', 'excited'); burst(); }, items.length * 700 + 500);
+  const minWait = new Promise(r => setTimeout(r, items.length * 700 + 500));
+  Promise.all([sendToEmail(v), minWait]).then(([ok]) => {
+    if (ok) {
+      $('done-lead').textContent = 'Username kamu udah nyampe ke aku 💌';
+      $('b-copy').style.display = 'none';
+    } else {
+      $('done-lead').textContent = 'Sinyalnya lagi iseng, kirimnya gagal 😅 Salin pesan ini terus kirim ke aku di chat ya.';
+      $('b-copy').style.display = 'block';
+    }
+    $('b-send').disabled = false;
+    show('s-done', 'excited'); burst();
+  });
 });
 
 $('b-copy').addEventListener('click', async () => {
