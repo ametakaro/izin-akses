@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Permintaan Izin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f3effa; --card:#ffffff; --ink:#1d1730; --muted:#6f6787; --line:#ebe5f5;
+    --accent:#7b5cd6; --accent-2:#b17ce8; --ok:#1f9d6b; --no:#d9576b;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--ink);
+    background:radial-gradient(circle at 20% 0%, #e7dcfb 0, transparent 45%),
+               radial-gradient(circle at 100% 100%, #fbe1ee 0, transparent 45%), var(--bg);
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px 16px;
+  }
+  .card {
+    width:100%; max-width:380px; background:var(--card); border-radius:28px; padding:28px 22px 22px;
+    box-shadow:0 24px 70px rgba(80,50,140,.18), 0 2px 6px rgba(80,50,140,.06);
+  }
+  .screen { display:none; animation:in .45s cubic-bezier(.2,.8,.2,1) both; }
+  .screen.active { display:block; }
+  @keyframes in { from{opacity:0; transform:translateY(12px) scale(.98)} to{opacity:1; transform:none} }
+
+  .app { display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .logo {
+    width:64px; height:64px; border-radius:20px; display:grid; place-items:center; font-size:30px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2)); box-shadow:0 10px 24px rgba(123,92,214,.35);
+  }
+  .tag { margin-top:14px; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); }
+  h1 { font-size:21px; font-weight:800; line-height:1.3; margin-top:6px; letter-spacing:-.01em; }
+  .lead { font-size:14px; color:var(--muted); margin-top:6px; line-height:1.5; }
+
+  .perms { list-style:none; margin:20px 0 4px; border:1px solid var(--line); border-radius:18px; overflow:hidden; }
+  .perms li { display:flex; gap:12px; padding:13px 14px; font-size:14px; line-height:1.4; align-items:flex-start; }
+  .perms li + li { border-top:1px solid var(--line); }
+  .perms .i { flex:0 0 22px; height:22px; border-radius:50%; display:grid; place-items:center; font-size:12px; font-weight:800; color:#fff; margin-top:1px; }
+  .perms .y .i { background:var(--ok); }
+  .perms .n .i { background:var(--no); }
+  .perms small { display:block; color:var(--muted); font-size:12.5px; margin-top:2px; }
+
+  .row { display:flex; gap:10px; margin-top:18px; }
+  button {
+    font:inherit; font-weight:700; font-size:15px; border-radius:16px; padding:14px; cursor:pointer;
+    border:none; transition:transform .12s ease, filter .2s ease, opacity .2s;
+  }
+  button:active { transform:scale(.97); }
+  .btn-main { flex:1; color:#fff; background:linear-gradient(135deg,var(--accent),var(--accent-2)); box-shadow:0 8px 20px rgba(123,92,214,.3); }
+  .btn-main:hover { filter:brightness(1.05); }
+  .btn-main:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
+  .btn-ghost { flex:1; color:var(--ink); background:#f2eef9; }
+  .btn-ghost:hover { background:#ebe5f6; }
+  .full { width:100%; }
+
+  .field { margin-top:20px; display:flex; align-items:center; border:2px solid var(--line); border-radius:16px; padding:0 14px; transition:border-color .2s; }
+  .field:focus-within { border-color:var(--accent); }
+  .field span { font-size:18px; font-weight:700; color:var(--accent); }
+  .field input { flex:1; border:none; outline:none; font:inherit; font-size:17px; font-weight:600; padding:14px 6px; background:transparent; color:var(--ink); min-width:0; }
+  .hint { font-size:12.5px; color:var(--muted); margin-top:8px; min-height:18px; }
+  .hint.err { color:var(--no); }
+
+  .steps { list-style:none; margin-top:22px; display:grid; gap:12px; }
+  .steps li { display:flex; gap:10px; align-items:center; font-size:14px; opacity:0; transform:translateY(6px); transition:all .35s ease; }
+  .steps li.show { opacity:1; transform:none; }
+  .dot { width:20px; height:20px; border-radius:50%; border:2px solid var(--line); border-top-color:var(--accent); animation:spin .7s linear infinite; flex:0 0 20px; }
+  .steps li.done .dot { animation:none; border:none; background:var(--ok); display:grid; place-items:center; }
+  .steps li.done .dot::after { content:'✓'; color:#fff; font-size:11px; font-weight:800; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .bubble { margin-top:18px; background:#f6f2fd; border:1px dashed #d6c9f2; border-radius:16px; padding:14px; font-size:15px; font-weight:600; text-align:center; word-break:break-word; }
+  .note { font-size:13px; color:var(--muted); text-align:center; margin-top:12px; line-height:1.5; }
+  .big { font-size:46px; text-align:center; }
+  footer { text-align:center; font-size:11.5px; color:var(--muted); margin-top:16px; }
+</style>
+</head>
+<body>
+<main class="card">
+
+  <!-- 1. Permintaan -->
+  <section class="screen active" id="s-ask">
+    <div class="app">
+      <div class="logo">👋</div>
+      <div class="tag">Permintaan izin</div>
+      <h1>Ada yang pengin follow kamu</h1>
+      <p class="lead">Dia minta akses ke beberapa hal berikut. Santai, kamu yang pegang kendali.</p>
+    </div>
+    <ul class="perms">
+      <li class="y"><span class="i">✓</span><div>Username Instagram kamu<small>Biar nggak cuma ngobrol di satu tempat</small></div></li>
+      <li class="y"><span class="i">✓</span><div>Nonton story kamu<small>Yang random juga boleh, malah lebih seru</small></div></li>
+      <li class="y"><span class="i">✓</span><div>Sesekali kirim meme ke DM<small>Kualitas terjamin, sudah dikurasi</small></div></li>
+      <li class="n"><span class="i">✕</span><div>Password kamu<small>Nggak perlu. Aku cuma kepo, bukan hacker</small></div></li>
+    </ul>
+    <div class="row">
+      <button class="btn-ghost" id="b-later" type="button">Nanti dulu</button>
+      <button class="btn-main" id="b-allow" type="button">Izinkan</button>
+    </div>
+  </section>
+
+  <!-- 2. Isi username -->
+  <section class="screen" id="s-input">
+    <div class="app">
+      <div class="logo">✍️</div>
+      <div class="tag">Satu langkah lagi</div>
+      <h1>Username IG kamu apa?</h1>
+      <p class="lead">Ketik aja di bawah. Janji nggak langsung nge-like foto 2019.</p>
+    </div>
+    <form id="f-user" autocomplete="off">
+      <label class="field">
+        <span>@</span>
+        <input id="u" type="text" inputmode="text" autocapitalize="none" spellcheck="false" maxlength="30" placeholder="username kamu">
+      </label>
+      <div class="hint" id="hint">Huruf, angka, titik, atau garis bawah.</div>
+      <div class="row">
+        <button class="btn-ghost" id="b-back" type="button">Kembali</button>
+        <button class="btn-main" id="b-send" type="submit" disabled>Kirim</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- 3. Proses -->
+  <section class="screen" id="s-load">
+    <div class="app">
+      <div class="logo">⏳</div>
+      <div class="tag">Memproses</div>
+      <h1>Sebentar ya…</h1>
+    </div>
+    <ul class="steps" id="steps">
+      <li><span class="dot"></span><span>Mengecek username</span></li>
+      <li><span class="dot"></span><span>Menyiapkan tombol follow</span></li>
+      <li><span class="dot"></span><span>Menahan diri biar nggak scroll sampai bawah</span></li>
+      <li><span class="dot"></span><span>Menyimpan senyummu barusan</span></li>
+    </ul>
+  </section>
+
+  <!-- 4. Berhasil -->
+  <section class="screen" id="s-done">
+    <div class="app">
+      <div class="logo">✅</div>
+      <div class="tag">Akses diberikan</div>
+      <h1>Makasih, <span id="uname"></span></h1>
+      <p class="lead">Tinggal satu hal: salin pesan ini, terus kirim ke aku di chat.</p>
+    </div>
+    <div class="bubble" id="msg"></div>
+    <button class="btn-main full" id="b-copy" type="button" style="margin-top:12px">Salin pesan</button>
+    <p class="note" id="copied">Notif follow dari aku segera meluncur. Siap-siap ya 😌</p>
+  </section>
+
+  <!-- 5. Nanti dulu -->
+  <section class="screen" id="s-later">
+    <div class="app">
+      <div class="big">😌</div>
+      <div class="tag" style="margin-top:10px">Permintaan disimpan</div>
+      <h1>Oke, nggak apa-apa</h1>
+      <p class="lead">Nggak ada tenggat waktu. Tawarannya tetap berlaku kapan pun kamu siap.</p>
+    </div>
+    <button class="btn-ghost full" id="b-change" type="button" style="margin-top:20px">Eh, berubah pikiran</button>
+  </section>
+
+  <footer>Permintaan ini dibuat khusus buat kamu ✨</footer>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const show = id => {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+};
+
+$('b-allow').onclick = () => { show('s-input'); setTimeout(() => $('u').focus(), 300); };
+$('b-later').onclick = () => show('s-later');
+$('b-change').onclick = () => show('s-ask');
+$('b-back').onclick = () => show('s-ask');
+
+const valid = v => /^(?!.*\.\.)(?!\.)(?!.*\.$)[a-z0-9._]{1,30}$/.test(v);
+
+$('u').addEventListener('input', e => {
+  const v = e.target.value.trim().replace(/^@+/, '').toLowerCase();
+  e.target.value = v;
+  const ok = valid(v);
+  $('b-send').disabled = !ok;
+  const h = $('hint');
+  if (!v) { h.textContent = 'Huruf, angka, titik, atau garis bawah.'; h.classList.remove('err'); }
+  else if (!ok) { h.textContent = 'Hmm, kayaknya bukan format username IG.'; h.classList.add('err'); }
+  else { h.textContent = 'Sip, kelihatannya valid.'; h.classList.remove('err'); }
+});
+
+let message = '';
+$('f-user').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = $('u').value.trim();
+  if (!valid(v)) return;
+  $('uname').textContent = '@' + v;
+  message = 'IG aku: @' + v + ' 😄';
+  $('msg').textContent = message;
+  show('s-load');
+  const items = [...document.querySelectorAll('#steps li')];
+  items.forEach(li => li.className = '');
+  items.forEach((li, i) => {
+    setTimeout(() => li.classList.add('show'), i * 650);
+    setTimeout(() => li.classList.add('done'), i * 650 + 550);
+  });
+  setTimeout(() => show('s-done'), items.length * 650 + 500);
+});
+
+$('b-copy').addEventListener('click', async () => {
+  const btn = $('b-copy');
+  try {
+    await navigator.clipboard.writeText(message);
+    btn.textContent = 'Tersalin ✓';
+  } catch (err) {
+    const r = document.createRange(); r.selectNodeContents($('msg'));
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    btn.textContent = 'Teksnya udah aku blok, tinggal salin';
+  }
+  setTimeout(() => { btn.textContent = 'Salin pesan'; }, 2500);
+});
+</script>
+</body>
+</html>
