@@ -185,11 +185,11 @@
   <!-- 4. Berhasil -->
   <section class="screen" id="s-done">
     <span class="tag">Akses diberikan 🎉</span>
-    <h1>Yeay! Makasih, <span id="uname"></span></h1>
-    <p class="lead" id="done-lead">Username kamu udah nyampe ke aku 💌</p>
-    <div class="bubble" id="msg"></div>
+    <h1 id="done-title">Makasih udah ngasih IG‑nya! 🫶</h1>
+    <p class="lead" id="done-lead"><b id="uname"></b> udah nyampe ke aku 💌</p>
+    <div class="bubble" id="msg">Seneng banget, sumpah. Sampai ketemu di DM ya 😎</div>
     <button class="btn-main full" id="b-copy" type="button" style="margin-top:14px; display:none">Salin pesan 📋</button>
-    <p class="note">Siap-siap dapat notif follow dari aku ✨</p>
+    <p class="note" id="done-note">Bentar lagi ada notif follow dari aku. Jangan kaget ya ✨</p>
   </section>
 
   <!-- 5. Nanti dulu -->
@@ -307,7 +307,7 @@ function sendToEmail(username){
     method:'POST',
     headers:{ 'Content-Type':'application/json', 'Accept':'application/json' },
     body: JSON.stringify({
-      _subject: '💌 Dia ngasih username IG-nya!',
+      _subject: '💌 Dia ngasih username IG‑nya!',
       _template: 'table',
       username: '@' + username,
       link: 'https://instagram.com/' + username,
@@ -328,7 +328,6 @@ $('f-user').addEventListener('submit', e => {
   $('b-send').disabled = true;
   $('uname').textContent = '@' + v;
   message = 'IG aku: @' + v + ' 😎';
-  $('msg').textContent = message;
   show('s-load', 'curious');
   const items = [...document.querySelectorAll('#steps li')];
   items.forEach(li => li.className = '');
@@ -339,10 +338,18 @@ $('f-user').addEventListener('submit', e => {
   const minWait = new Promise(r => setTimeout(r, items.length * 700 + 500));
   Promise.all([sendToEmail(v), minWait]).then(([ok]) => {
     if (ok) {
-      $('done-lead').textContent = 'Username kamu udah nyampe ke aku 💌';
+      $('done-title').textContent = 'Makasih udah ngasih IG‑nya! 🫶';
+      $('done-lead').innerHTML = '';
+      const b = document.createElement('b'); b.textContent = '@' + v;
+      $('done-lead').append(b, ' udah nyampe ke aku 💌');
+      $('msg').textContent = 'Seneng banget, sumpah. Sampai ketemu di DM ya 😎';
+      $('done-note').textContent = 'Bentar lagi ada notif follow dari aku. Jangan kaget ya ✨';
       $('b-copy').style.display = 'none';
     } else {
-      $('done-lead').textContent = 'Sinyalnya lagi iseng, kirimnya gagal 😅 Salin pesan ini terus kirim ke aku di chat ya.';
+      $('done-title').textContent = 'Makasih udah mau ngasih IG‑nya! 🫶';
+      $('done-lead').textContent = 'Tapi sinyalnya lagi iseng, kirimnya gagal 😅 Salin pesan ini terus kirim ke aku di chat ya.';
+      $('msg').textContent = message;
+      $('done-note').textContent = 'Habis itu, siap-siap dapat notif follow dari aku ✨';
       $('b-copy').style.display = 'block';
     }
     $('b-send').disabled = false;
